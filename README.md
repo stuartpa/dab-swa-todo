@@ -30,10 +30,10 @@ If you don't have a SQL Server or Azure SQL Emulator installed locally, you can 
 
 Install the `sqlcmd` tool, using the documentation available [here](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/go-sqlcmd-utility). 
 
-Then download the latest version of SQL Server:
+Then download the latest version of SQL Server and deploy the .dacpac:
 
 ```shell
-sqlcmd create mssql --accept-eula --user-database TodoDB --context-name todo-demo
+sqlcmd create mssql --database TodoDB --use .\database\TodoDB\bin\Release\TodoDB.dacpac --context-name todo-demo
 ```
 
 once download is finished, make sure the container is running:
@@ -41,28 +41,6 @@ once download is finished, make sure the container is running:
 ```shell
 sqlcmd start todo-demo
 ```
-
-Get the connection string via
-
-```shell
-sqlcmd config connection-strings
-```
-
-and the copy the ADO.NET connection string to the clipboard. It will look like this:
-
-```
-Server=<server>;Initial Catalog=master;Persist Security Info=False;User ID=<admin-user>;Password=<admin-password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;
-```
-
-Now create a `.env` text file and paste the connection string in there, so that the value it is assigned to the `AZURE_SQL_DEPLOY_USER` environment variable. It should look like this:
-
-```shell
-AZURE_SQL_DEPLOY_USER='Server=<server>;Initial Catalog=master;Persist Security Info=False;User ID=<admin-user>;Password=<admin-password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;'
-```
-
-in the `.env` file just created, replace the `Initial Catalog` value from `master` to `TodoDB`.
-
-The `deploy-db.ps1` script can be used to deploy the database to a local SQL Server instance or Azure SQL Emulator. It will create a new database called `TodoDB` and a new user called `todo_dab_user`. 
 
 ### Run the app locally
 
@@ -75,16 +53,8 @@ swa build
 If you haven't create an `.env` file yet, create one in the root folder, and the `AZURE_SQL_APP_USER` environment variable to set it to the connection string pointing to the local SQL Server instance or Azure SQL Emulator:
 
 ```shell
-AZURE_SQL_APP_USER='Server=<server>;Database=TodoDB;User ID=<username>;Password=<password>;TrustServerCertificate=true;'
+sqlcmd config connection-strings --type ADO.Net > secret & SET /p AZURE_SQL_APP_USER=<secret & del secret
 ```
-
-if you have used the provided script to deploy the database, the connection string will be:
-
-```shell
-AZURE_SQL_APP_USER='Server=<server>;Database=TodoDB;User ID=todo_dab_user;Password=rANd0m_PAzzw0rd!;TrustServerCertificate=true;'
-```
-
-please notice that the `<server>` value is the same as the one used to deploy the database. If you used `sqlcmd` to create the database, use `sqlcmd config connection-strings` to see that `<server>` is for you. If you only have one instance of SQL Server installed, it will be `localhost`.
 
 Then start the app locally using the following command:
 
